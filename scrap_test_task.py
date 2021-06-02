@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup as bs
 import time
 import threading
 import json
+import scrap_proxy
 
 urls = [
     'https://www.rusprofile.ru/codes/89220',
@@ -15,6 +16,8 @@ headers = {'accept': '*/*', 'user-agent':
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.'
     '36'}
 
+proxy = ['34.203.142.175:80', '103.83.116.202:55443']
+
 
 def parse(base_url, headers, company_names, company_info, company_status):
     session = requests.Session()
@@ -24,13 +27,12 @@ def parse(base_url, headers, company_names, company_info, company_status):
         # Получаем количество страниц
         res_peging = soup.find_all('div', class_='search-result-paging')
         urls = [base_url]
-
         for page in res_peging:
             page_url = page.find('a').get('href')
             urls.append('https://www.rusprofile.ru/' + page_url)
 
         for url in urls:
-            request = session.get(url, headers=headers)
+            request = requests.get(url, headers=headers)
             soup = bs(request.content, 'lxml')
             # Парсим названием компании
             parse_company_names(soup, company_names)
@@ -41,6 +43,7 @@ def parse(base_url, headers, company_names, company_info, company_status):
             # парсим статус компании(у некоторых есть)
             parse_company_status(soup, company_status)
     else:
+        parse()
         print('ERROR')
 
 
@@ -96,6 +99,7 @@ company_names = []
 company_info = []
 company_status = []
 
+
 # start = time.time()
 # for url in urls:
 #     parse(url, headers, company_names, company_info, company_status)
@@ -113,7 +117,12 @@ for url in urls:
 for thread in threads:
     thread.join()
 
-#print(f'Threading: {time.time() - start : .2f} seconds')
+print(f'Threading: {time.time() - start : .2f} seconds')
+
+
+# Закоментить
+# for url in urls:
+#     parse(url, proxy, company_names, company_info, company_status)
 
 print(company_names)
 print(company_info)
